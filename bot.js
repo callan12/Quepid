@@ -81,4 +81,6 @@ client.on('message', message => {
 
 });
 
-client.login('NTM1ODg0OTQyMzU0MTUzNTAw.Dylvlg.mk2uMrrDZjjQSA1jpsVlrlfIr1k');
+/*UNCOMMENT THIS
+client.login('insert your bots token here, keep this private')
+*/
