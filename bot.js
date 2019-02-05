@@ -4,83 +4,122 @@ const ytdl = require('ytdl-core');
 
 const client = new Discord.Client();
 
-//List of all accepted commands
-const commands = ["play", "pause", "resume", "stop", "skip", "last", "add", "repeat"];
-//List of all accepted streaming services
-const services = ["youtu.be", "youtube", "spotify", "soundcloud"]
-
 //Runs on every message sent
 client.on('message', message => {
-	if (message.author.id === client.user.id) return; //Bot will not respond to itself
-	if (message.content.charAt(0) !== '!') return; //Trigger for commands is '!'
-
-	const command = message.content.split(" ")[0].substring(1);
-	message.reply("Your command is: " + command);
-
-	//Command handling
-	if (commands.includes(command)) {
-		if (command === "play") {
-			//Check for voice channel
-			const voiceChannel = message.member.voiceChannel;
-			if (!voiceChannel) {
-				return message.reply('Please join a voice channel before playing music.');
-			}
-
-
-
-			//Check for valid link from a supported service
-			if (message.content.split(" ").length < 2) {
-				return message.reply("I'm not a mindreader. Link me something!")
-			} else {
-				const link = message.content.split(" ")[1];
-
-				if (link.includes(services[0]) || link.includes(services[1])) { //YOUTUBE
-					message.reply("You linked a song from Youtube.");
-
-					voiceChannel.join()
-						.then(connection => {
-							const stream = ytdl(link, { filter: 'audioonly' })
-							const dispatcher = connection.playStream(stream);
-							}
-						);
-				} else if (link.includes(services[2])) { //SPOTIFY
-					message.reply("You linked a song from Spotify.")
-					//TODO Handle Spotify links and play music
-
-				} else if (link.includes(services[3])) { //SOUNDCLOUD
-					source = "soundcloud"
-					message.reply("You linked a song from Soundcloud.")
-					//TODO Handle Soundcloud links and play music
-
-				} else if (source === "") { //NOT SUPPORTED
-					return message.reply("I don't support this type of link.");
-				}
-				//Play music from identified stream
-				if (dispatcher != undefined) {
-					const dispatcher = connection.playStream(stream)
-				} else {
-					return message.reply("Oh no! Stream is undefined!")
-				}
-				
-			}
-		}
-
-		if (command === "pause") {
-
-		}
-
-		if (command === "stop") {
-
-		}
-
-
-
+	let member = message.member;
+	if (member.id !== client.user.id && message.content.charAt(0) == "!") {
+			commandPicker(message);
 	} else {
-		message.reply(command + " is an invalid command.");
+		console.log("Message not accepted...")
+		console.log("Member ID: "+member.id)
+		console.log("Client ID: "+client.user.id)
+		console.log("First char: "+message.content.charAt(0))
 	}
 
 });
 
-/*UNCOMMENT THIS
-client.login('insert your bots token here, keep this private')
-*/
+function commandPicker(message) {
+	//handles commands
+	const messageSplit = message.content.split(" ");
+	const command = messageSplit[0].substring(1);
+	message.reply("Your command is: " + command)
+
+	switch (command) {
+		case "play":
+		player(message, messageSplit[1]);
+		break;
+		case "stop":
+		stopper(message);
+		break;
+		case "pause":
+		pauser(message);
+		break;
+		case "next":
+		nexter(message);
+		break;
+		case "last":
+		laster(message);
+		break;
+		default:
+		message.reply("I don't understand your command.");
+	}
+}
+function servicePicker(link) {
+	//Figures out which service the link belongs to
+	const lower = link.toLowerCase();
+
+	if (lower.includes("youtube") || lower.includes("youtu.be")) {
+		return "youtube"
+	} else if (lower.includes("spotify")) {
+		return "spotify"
+	} else if (lower.includes("soundcloud")) {
+		return "soundcloud"
+	} else {
+		return null
+	}
+}
+
+function player(message, link) {
+	//dispatches the service handlers
+	if (message.content.split(" ").length < 2) {
+		return message.reply("Give me something to play.")
+	} else {
+		switch (servicePicker(link)) {
+			case "youtube":
+			youtubeHandler(message, link);
+			break;
+			case "spotify":
+			spotifyHandler();
+			break;
+			case "soundcloud":
+			soundCloudHandler();
+			break;
+			default:
+			message.reply("I don't support that service.")
+		}
+	}
+}
+
+function stopper(message) {
+	message.reply("Stop requested");
+}
+
+function pauser(message) {
+	message.reply("Pause requested");
+}
+
+function nexter(message) {
+	message.reply("Next requested");
+}
+
+function laster(message) {
+	message.reply("Last requested");
+}
+
+
+
+
+function youtubeHandler(message, link) {
+	voiceChannel = message.member.voiceChannel;
+	if (voiceChannel!=null) {
+		voiceChannel.join().then(connection => {
+			const stream = ytdl(link, { filter: 'audioonly' })
+			const dispatcher = connection.playStream(stream);
+			});
+	} else {
+		message.reply("You must be in a voice channel first!")
+	}
+
+	function stop() {
+		dispatcher.end('user')
+	}
+}
+
+function spotifyHandler() {
+
+}
+
+function soundCloudHandler() {
+
+}
+
